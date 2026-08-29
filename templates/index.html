@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -130,6 +131,7 @@
 <div class="container">
 
 ```
+<!-- EMERGENCY CONTACT -->
 <div class="card">
     <h2>👤 Emergency Contact</h2>
 
@@ -148,6 +150,7 @@
     </div>
 </div>
 
+<!-- LOCATION -->
 <div class="card">
     <h2>📍 Location</h2>
 
@@ -166,6 +169,7 @@
     </button>
 </div>
 
+<!-- LIVE LOCATION -->
 <div class="card">
     <h2>📡 Live Location</h2>
 
@@ -184,6 +188,7 @@
     </div>
 </div>
 
+<!-- SOS -->
 <div class="card">
     <h2>🚨 Emergency SOS</h2>
 
@@ -197,6 +202,7 @@
     </div>
 </div>
 
+<!-- POLICE SUPPORT -->
 <div class="card">
     <h2>🚓 Police Support</h2>
 
@@ -221,6 +227,7 @@
     </button>
 </div>
 
+<!-- SHARE LOCATION -->
 <div class="card">
     <h2>🔗 Share Location</h2>
 
@@ -253,7 +260,7 @@ let liveLocationWatch = null;
 
 
 /* ======================================================
-   SAVE EMERGENCY CONTACT
+   SAVE EMERGENCY CONTACT - FIXED
 ====================================================== */
 
 async function saveEmergencyContact() {
@@ -267,8 +274,9 @@ async function saveEmergencyContact() {
         return;
     }
 
-    try {
+    status.innerHTML = "⏳ Saving emergency contact...";
 
+    try {
         const response = await fetch("/emergency", {
             method: "POST",
             headers: {
@@ -280,17 +288,28 @@ async function saveEmergencyContact() {
             })
         });
 
-        const data = await response.json();
+        const text = await response.text();
 
-        if (data.success) {
-            status.innerHTML = "✅ Emergency contact saved";
+        let data;
+
+        try {
+            data = JSON.parse(text);
+        } catch (jsonError) {
+            console.error("Server response:", text);
+            throw new Error("Invalid server response");
+        }
+
+        if (response.ok && data.success) {
+            status.innerHTML = "✅ Emergency contact saved successfully";
         } else {
-            status.innerHTML = "❌ Unable to save contact";
+            status.innerHTML =
+                "❌ " + (data.message || "Unable to save contact");
         }
 
     } catch (error) {
-        status.innerHTML = "❌ Server connection error";
-        console.error(error);
+        console.error("Emergency contact error:", error);
+        status.innerHTML =
+            "❌ Server connection error. Please try again.";
     }
 }
 
@@ -341,7 +360,7 @@ function getLocation() {
 
 
 /* ======================================================
-   SAVE LOCATION TO FLASK
+   SAVE LOCATION TO SERVER
 ====================================================== */
 
 async function saveLocationToServer() {
@@ -574,12 +593,6 @@ function openPoliceStations() {
 
 function callPolice() {
 
-    const status =
-        document.getElementById("callStatus");
-
-    status.innerHTML =
-        "📞 Opening phone dialer...";
-
     window.location.href = "tel:112";
 }
 
@@ -674,12 +687,10 @@ async function sendSOS() {
             return;
         }
 
-        // Get emergency phone number
         const phone =
             document.getElementById("contactPhone")
                 .value.trim();
 
-        // Save latest location
         saveLocationToServer();
 
         if (!phone) {
@@ -691,7 +702,6 @@ async function sendSOS() {
             return;
         }
 
-        // Create location link
         const mapLink =
             "https://www.google.com/maps?q=" +
             currentLatitude + "," +
@@ -707,7 +717,6 @@ async function sendSOS() {
             "📍 Location received<br>" +
             "📱 Opening emergency SMS...";
 
-        // Open SMS application on mobile
         window.location.href =
             "sms:" + phone +
             "?body=" +
