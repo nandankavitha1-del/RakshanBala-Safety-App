@@ -1,0 +1,36 @@
+function saveEmergencyContact() {
+
+    const name = document.getElementById("contactName").value.trim();
+    const phone = document.getElementById("contactPhone").value.trim();
+
+    if (!name || !phone) {
+        alert("Please enter contact name and phone number.");
+        return;
+    }
+
+    localStorage.setItem("emergencyContactName", name);
+    localStorage.setItem("emergencyContactPhone", phone);
+
+    document.getElementById("contactStatus").innerHTML =
+        "✅ Emergency contact saved<br>" +
+        "Name: " + name + "<br>" +
+        "Phone: " + phone;
+}
+
+
+function loadEmergencyContact() {
+
+    const name = localStorage.getItem("emergencyContactName");
+    const phone = localStorage.getItem("emergencyContactPhone");
+
+    if (name && phone) {
+
+        document.getElementById("contactName").value = name;
+        document.getElementById("contactPhone").value = phone;
+
+        document.getElementById("contactStatus").innerHTML =
+            "✅ Saved Contact<br>" +
+            "Name: " + name + "<br>" +
+            "Phone: " + phone;
+    }
+}

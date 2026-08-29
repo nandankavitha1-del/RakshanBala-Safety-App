@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>RakshanBala - Register</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+        }
+
+        .box {
+            width: 90%;
+            max-width: 400px;
+            margin: 50px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+        }
+
+        h1,
+        h2 {
+            text-align: center;
+        }
+
+        h1 {
+            color: #b00020;
+            margin-bottom: 10px;
+        }
+
+        input,
+        button {
+            width: 100%;
+            padding: 13px;
+            margin: 8px 0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        input {
+            border: 1px solid #ccc;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #b00020;
+        }
+
+        button {
+            border: none;
+            background: #b00020;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .error {
+            color: #b00020;
+            background: #ffe5e5;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .login {
+            text-align: center;
+            margin-top: 18px;
+        }
+
+        .login a {
+            color: #b00020;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="box">
+
+    <h1>🛡️ RakshanBala</h1>
+
+    <h2>Create Account</h2>
+
+
+    {% if error %}
+
+        <p class="error">
+            ❌ {{ error }}
+        </p>
+
+    {% endif %}
+
+
+    <form
+        method="POST"
+        action="/register"
+    >
+
+        <input
+            type="text"
+            name="name"
+            placeholder="Enter your name"
+            value="{{ name or '' }}"
+            required
+        >
+
+
+        <input
+            type="tel"
+            name="phone"
+            placeholder="Enter phone number"
+            value="{{ phone or '' }}"
+            required
+        >
+
+
+        <input
+            type="password"
+            name="password"
+            placeholder="Create password"
+            minlength="4"
+            required
+        >
+
+
+        <input
+            type="password"
+            name="confirm_password"
+            placeholder="Confirm password"
+            minlength="4"
+            required
+        >
+
+
+        <button type="submit">
+            REGISTER
+        </button>
+
+    </form>
+
+
+    <div class="login">
+
+        Already have an account?
+
+        <a href="/login">
+            Login
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

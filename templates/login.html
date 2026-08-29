@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>RakshanBala - Login</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #222;
+        }
+
+        .box {
+            width: 90%;
+            max-width: 400px;
+            margin: 60px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        h1,
+        h2 {
+            text-align: center;
+        }
+
+        h1 {
+            color: #b00020;
+            margin-top: 0;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        input,
+        button {
+            width: 100%;
+            padding: 13px;
+            margin: 8px 0;
+            box-sizing: border-box;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        input {
+            border: 1px solid #ccc;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #b00020;
+        }
+
+        button {
+            border: none;
+            background: #b00020;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .forgot {
+            text-align: right;
+            margin-top: 5px;
+            margin-bottom: 10px;
+        }
+
+        .forgot a {
+            color: #b00020;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .forgot a:hover {
+            text-decoration: underline;
+        }
+
+        .error {
+            color: #d00000;
+            text-align: center;
+            background: #ffe5e5;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .register {
+            text-align: center;
+            margin-top: 18px;
+        }
+
+        .register a {
+            color: #b00020;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .register a:hover {
+            text-decoration: underline;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="box">
+
+    <h1>🛡️ RakshanBala</h1>
+
+    <h2>Login</h2>
+
+
+    {% if error %}
+
+        <p class="error">
+            ❌ {{ error }}
+        </p>
+
+    {% endif %}
+
+
+    <form method="POST" action="/login">
+
+        <input
+            type="tel"
+            name="phone"
+            placeholder="Enter phone number"
+            required
+        >
+
+
+        <input
+            type="password"
+            name="password"
+            placeholder="Enter password"
+            required
+        >
+
+
+        <!-- FORGOT PASSWORD -->
+
+        <div class="forgot">
+
+            <a href="/forgot_password">
+                Forgot Password?
+            </a>
+
+        </div>
+
+
+        <button type="submit">
+            LOGIN
+        </button>
+
+    </form>
+
+
+    <div class="register">
+
+        Don't have an account?
+
+        <a href="/register">
+            Register
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

@@ -1,0 +1,661 @@
+<script>
+
+/* ======================================================
+   GLOBAL VARIABLES
+====================================================== */
+
+let currentLatitude = null;
+let currentLongitude = null;
+let liveLocationWatch = null;
+
+
+/* ======================================================
+   SAVE EMERGENCY CONTACT
+====================================================== */
+
+async function saveEmergencyContact() {
+
+    const nameInput = document.getElementById("contactName");
+    const phoneInput = document.getElementById("contactPhone");
+    const status = document.getElementById("contactStatus");
+
+    const name = nameInput.value.trim();
+    const phone = phoneInput.value.trim();
+
+    if (!name || !phone) {
+        status.innerHTML =
+            "❌ Please enter name and phone number";
+        return;
+    }
+
+    status.innerHTML =
+        "⏳ Saving emergency contact...";
+
+    try {
+
+        const response = await fetch("/emergency", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name: name,
+                phone: phone
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+
+            status.innerHTML =
+                "✅ Emergency contact saved";
+
+        } else {
+
+            status.innerHTML =
+                "❌ " +
+                (data.message || "Unable to save contact");
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        status.innerHTML =
+            "❌ Server connection error";
+    }
+}
+
+
+/* ======================================================
+   GET CURRENT LOCATION
+====================================================== */
+
+function getLocation() {
+
+    const status =
+        document.getElementById("locationStatus");
+
+    if (!navigator.geolocation) {
+
+        status.innerHTML =
+            "❌ Location is not supported";
+
+        return;
+    }
+
+    status.innerHTML =
+        "📍 Getting current location...";
+
+    navigator.geolocation.getCurrentPosition(
+
+        function(position) {
+
+            currentLatitude =
+                position.coords.latitude;
+
+            currentLongitude =
+                position.coords.longitude;
+
+            status.innerHTML =
+                "✅ Location received<br>" +
+                "Latitude: " +
+                currentLatitude +
+                "<br>" +
+                "Longitude: " +
+                currentLongitude;
+
+            saveLocationToServer();
+        },
+
+        function(error) {
+
+            status.innerHTML =
+                "❌ Unable to get location.<br>" +
+                error.message;
+        },
+
+        {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0
+        }
+    );
+}
+
+
+/* ======================================================
+   SAVE LOCATION
+====================================================== */
+
+async function saveLocationToServer() {
+
+    if (
+        currentLatitude === null ||
+        currentLongitude === null
+    ) {
+        return;
+    }
+
+    try {
+
+        await fetch("/update_location", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                latitude: currentLatitude,
+                longitude: currentLongitude
+            })
+        });
+
+    } catch (error) {
+
+        console.log(
+            "Location server error:",
+            error
+        );
+    }
+}
+
+
+/* ======================================================
+   OPEN GOOGLE MAPS
+====================================================== */
+
+function openGoogleMaps() {
+
+    if (
+        currentLatitude === null ||
+        currentLongitude === null
+    ) {
+
+        alert(
+            "Please get your location first."
+        );
+
+        return;
+    }
+
+    const url =
+        "https://www.google.com/maps?q=" +
+        currentLatitude +
+        "," +
+        currentLongitude;
+
+    window.open(url, "_blank");
+}
+
+
+/* ======================================================
+   START LIVE LOCATION
+====================================================== */
+
+function startLiveLocation() {
+
+    const status =
+        document.getElementById("liveStatus");
+
+    if (!navigator.geolocation) {
+
+        status.innerHTML =
+            "❌ Location is not supported";
+
+        return;
+    }
+
+    if (liveLocationWatch !== null) {
+
+        status.innerHTML =
+            "🟢 Live location already running";
+
+        return;
+    }
+
+    status.innerHTML =
+        "⏳ Starting live location...";
+
+    liveLocationWatch =
+        navigator.geolocation.watchPosition(
+
+            function(position) {
+
+                currentLatitude =
+                    position.coords.latitude;
+
+                currentLongitude =
+                    position.coords.longitude;
+
+                status.innerHTML =
+                    "🟢 LIVE LOCATION ACTIVE<br>" +
+                    "Latitude: " +
+                    currentLatitude +
+                    "<br>" +
+                    "Longitude: " +
+                    currentLongitude;
+
+                saveLocationToServer();
+            },
+
+            function(error) {
+
+                status.innerHTML =
+                    "❌ " + error.message;
+            },
+
+            {
+                enableHighAccuracy: true,
+                maximumAge: 5000,
+                timeout: 15000
+            }
+        );
+}
+
+
+/* ======================================================
+   STOP LIVE LOCATION
+====================================================== */
+
+function stopLiveLocation() {
+
+    const status =
+        document.getElementById("liveStatus");
+
+    if (liveLocationWatch !== null) {
+
+        navigator.geolocation.clearWatch(
+            liveLocationWatch
+        );
+
+        liveLocationWatch = null;
+    }
+
+    status.innerHTML =
+        "⛔ Live location stopped";
+}
+
+
+/* ======================================================
+   SHARE LIVE LOCATION
+====================================================== */
+
+async function shareLocation() {
+
+    if (
+        currentLatitude === null ||
+        currentLongitude === null
+    ) {
+
+        alert(
+            "Please start Live Location first."
+        );
+
+        return;
+    }
+
+    const mapLink =
+        "https://www.google.com/maps?q=" +
+        currentLatitude +
+        "," +
+        currentLongitude;
+
+    const shareText =
+        "🚨 RakshanBala Emergency Location\n\n" +
+        "📍 My current location:\n" +
+        mapLink;
+
+    const status =
+        document.getElementById("shareStatus");
+
+    try {
+
+        if (navigator.share) {
+
+            await navigator.share({
+
+                title:
+                    "RakshanBala Location",
+
+                text:
+                    shareText
+            });
+
+            status.innerHTML =
+                "✅ Location shared";
+
+        } else {
+
+            await navigator.clipboard.writeText(
+                shareText
+            );
+
+            status.innerHTML =
+                "✅ Location link copied";
+        }
+
+    } catch (error) {
+
+        console.log(
+            "Share cancelled:",
+            error
+        );
+    }
+}
+
+
+/* ======================================================
+   FIND NEAREST POLICE STATION
+====================================================== */
+
+function findNearestPoliceStation() {
+
+    const status =
+        document.getElementById("policeStatus");
+
+    const mapButton =
+        document.getElementById("policeMapButton");
+
+    mapButton.style.display = "none";
+
+
+    /* Use existing live location */
+
+    if (
+        currentLatitude !== null &&
+        currentLongitude !== null
+    ) {
+
+        status.innerHTML =
+            "✅ Location received<br>" +
+            "🚓 Nearby police stations ready";
+
+        mapButton.style.display =
+            "block";
+
+        return;
+    }
+
+
+    /* Otherwise get location */
+
+    if (!navigator.geolocation) {
+
+        status.innerHTML =
+            "❌ Location is not supported";
+
+        return;
+    }
+
+    status.innerHTML =
+        "📍 Getting your location...";
+
+    navigator.geolocation.getCurrentPosition(
+
+        function(position) {
+
+            currentLatitude =
+                position.coords.latitude;
+
+            currentLongitude =
+                position.coords.longitude;
+
+            status.innerHTML =
+                "✅ Location received<br>" +
+                "🚓 Nearby police stations ready";
+
+            mapButton.style.display =
+                "block";
+        },
+
+        function(error) {
+
+            status.innerHTML =
+                "❌ Location unavailable<br>" +
+                "Please start Live Location first.";
+        },
+
+        {
+            enableHighAccuracy: false,
+            timeout: 10000,
+            maximumAge: 300000
+        }
+    );
+}
+
+
+/* ======================================================
+   OPEN POLICE STATIONS
+====================================================== */
+
+function openPoliceStations() {
+
+    if (
+        currentLatitude === null ||
+        currentLongitude === null
+    ) {
+
+        alert(
+            "Please get your location first."
+        );
+
+        return;
+    }
+
+    const url =
+        "https://www.google.com/maps/search/?api=1&query=" +
+        encodeURIComponent(
+            "police station near " +
+            currentLatitude +
+            "," +
+            currentLongitude
+        );
+
+    window.open(url, "_blank");
+}
+
+
+/* ======================================================
+   CALL POLICE 112
+====================================================== */
+
+function callPolice() {
+
+    const status =
+        document.getElementById("callStatus");
+
+    status.innerHTML =
+        "📞 Opening phone dialer...";
+
+    window.location.href =
+        "tel:112";
+}
+
+
+/* ======================================================
+   ACTIVATE SOS
+====================================================== */
+
+async function activateSOS() {
+
+    const status =
+        document.getElementById("sosStatus");
+
+    if (
+        currentLatitude === null ||
+        currentLongitude === null
+    ) {
+
+        status.innerHTML =
+            "📍 Getting location for SOS...";
+
+        if (!navigator.geolocation) {
+
+            status.innerHTML =
+                "❌ Location is not supported";
+
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+
+            async function(position) {
+
+                currentLatitude =
+                    position.coords.latitude;
+
+                currentLongitude =
+                    position.coords.longitude;
+
+                await sendSOS();
+            },
+
+            function(error) {
+
+                status.innerHTML =
+                    "❌ Unable to get location.<br>" +
+                    error.message;
+            },
+
+            {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0
+            }
+        );
+
+        return;
+    }
+
+    await sendSOS();
+}
+
+
+/* ======================================================
+   SEND SOS
+====================================================== */
+
+async function sendSOS() {
+
+    const status =
+        document.getElementById("sosStatus");
+
+    status.innerHTML =
+        "🚨 SOS ACTIVATING...";
+
+    try {
+
+        const response =
+            await fetch("/sos", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    latitude:
+                        currentLatitude,
+
+                    longitude:
+                        currentLongitude
+                })
+            });
+
+        const data =
+            await response.json();
+
+        if (data.success) {
+
+            status.innerHTML =
+                "🚨 SOS ACTIVATED<br>" +
+                "📍 Location received<br>" +
+                "Latitude: " +
+                currentLatitude +
+                "<br>" +
+                "Longitude: " +
+                currentLongitude;
+
+        } else {
+
+            status.innerHTML =
+                "❌ SOS failed";
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        status.innerHTML =
+            "❌ SOS server connection error";
+    }
+}
+
+
+/* ======================================================
+   LOAD EMERGENCY CONTACT
+====================================================== */
+
+async function loadEmergencyContact() {
+
+    try {
+
+        const response =
+            await fetch("/emergency");
+
+        if (!response.ok) {
+            return;
+        }
+
+        const data =
+            await response.json();
+
+        if (data.success && data.contact) {
+
+            document.getElementById(
+                "contactName"
+            ).value =
+                data.contact.name || "";
+
+            document.getElementById(
+                "contactPhone"
+            ).value =
+                data.contact.phone || "";
+
+            document.getElementById(
+                "contactStatus"
+            ).innerHTML =
+                "✅ Emergency contact loaded";
+        }
+
+    } catch (error) {
+
+        console.log(
+            "Contact loading skipped:",
+            error
+        );
+    }
+}
+
+
+/* ======================================================
+   PAGE LOAD
+====================================================== */
+
+window.addEventListener(
+    "load",
+    function() {
+
+        loadEmergencyContact();
+
+    }
+);
+
+</script>

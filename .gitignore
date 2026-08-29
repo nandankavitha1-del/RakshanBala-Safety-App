@@ -1,0 +1,14 @@
+# Private SSL keys
+ssl/cert.key
+
+# Database files
+*.db
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Private location/contact data
+emergency_contact.json
+location.json
+location - Copy.json

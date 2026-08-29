@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RakshanBala Live Location</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #222;
+            text-align: center;
+        }
+
+        header {
+            background: #b00020;
+            color: white;
+            padding: 20px;
+        }
+
+        .card {
+            max-width: 500px;
+            margin: 30px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            margin-top: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #1565c0;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f1f1f1;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>📍 RakshanBala</h1>
+    <p>Family & Friends Live Location</p>
+</header>
+
+<div class="card">
+
+    <h2>Live Location Viewer</h2>
+
+    <div class="status" id="status">
+        ⏳ Waiting for live location...
+    </div>
+
+    <button onclick="openLocation()">
+        🗺️ OPEN LIVE LOCATION IN GOOGLE MAPS
+    </button>
+
+</div>
+
+<script>
+
+let latitude = null;
+let longitude = null;
+
+async function getLiveLocation() {
+
+    try {
+
+        const response = await fetch("/get_live_location");
+        const data = await response.json();
+
+        if (data.success) {
+
+            latitude = data.latitude;
+            longitude = data.longitude;
+
+            document.getElementById("status").innerHTML =
+                "🟢 LIVE LOCATION AVAILABLE<br><br>" +
+                "📍 Latitude: " + latitude +
+                "<br>📍 Longitude: " + longitude;
+
+        } else {
+
+            document.getElementById("status").innerHTML =
+                "⏳ " + data.message;
+
+        }
+
+    } catch (error) {
+
+        document.getElementById("status").innerHTML =
+            "❌ Unable to connect to RakshanBala server";
+
+    }
+
+}
+
+function openLocation() {
+
+    if (latitude === null || longitude === null) {
+
+        alert("Live location is not available yet.");
+        return;
+
+    }
+
+    const url =
+        "https://www.google.com/maps?q=" +
+        latitude +
+        "," +
+        longitude;
+
+    window.open(url, "_blank");
+
+}
+
+/* Refresh location every 5 seconds */
+getLiveLocation();
+setInterval(getLiveLocation, 5000);
+
+</script>
+
+</body>
+</html>
