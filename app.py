@@ -1,12 +1,13 @@
-from flask import Flask, jsonify, render_template, request, redirect, url_for
+from flask import Flask, jsonify, render_template, request, redirect, url_for, session
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
+app.secret_key = "rakshanbala-change-this-secret-key"
+
 DATABASE = "rakshanbala.db"
 
-# Latest live location
 latest_location = {}
 
 
@@ -35,15 +36,17 @@ def init_db():
     conn.close()
 
 
-# Create database/table when app starts
 init_db()
 
 
 # =========================
-# LOGIN PAGE
+# LOGIN
 # =========================
 @app.route("/", methods=["GET"])
 def home():
+    if "user_id" in session:
+        return redirect(url_for("main_home"))
+
     return render_template("login.html")
 
 
@@ -53,9 +56,6 @@ def login():
 
         phone = request.form.get("phone", "").strip()
         password = request.form.get("password", "")
-
-        if not phone or not password:
-            return "Phone number and password are required.", 400
 
         conn = get_db()
 
@@ -67,6 +67,10 @@ def login():
         conn.close()
 
         if user and check_password_hash(user["password"], password):
+            session["user_id"] = user["id"]
+            session["user_name"] = user["name"]
+            session["user_phone"] = user["phone"]
+
             return redirect(url_for("main_home"))
 
         return """
@@ -90,7 +94,7 @@ def register():
         password = request.form.get("password", "")
         confirm_password = request.form.get("confirm_password", "")
 
-        if not name or not phone or not password:
+        if not name or not phone or not password or not confirm_password:
             return "All fields are required.", 400
 
         if password != confirm_password:
@@ -119,7 +123,7 @@ def register():
 
             return """
             <h3>❌ Phone number already registered</h3>
-            <a href="/">Go to Login</a>
+            <a href="/register">Go to Login</a>
             """
 
         conn.close()
@@ -130,11 +134,89 @@ def register():
 
 
 # =========================
-# MAIN RAKSHANBALA PAGE
+# FORGOT PASSWORD PAGE
+# =========================
+@app.route("/forgot_password", methods=["GET"])
+def forgot_password_page():
+    return render_template("forgot_password.html")
+
+
+# =========================
+# RESET PASSWORD
+# =========================
+@app.route("/reset_password", methods=["POST"])
+def reset_password():
+
+    phone = request.form.get("phone", "").strip()
+    new_password = request.form.get("new_password", "")
+    confirm_password = request.form.get("confirm_password", "")
+
+    phone = phone.replace(" ", "")
+
+    if not phone or not new_password or not confirm_password:
+        return render_template(
+            "forgot_password.html",
+            error="Please fill all fields"
+        )
+
+    if new_password != confirm_password:
+        return render_template(
+            "forgot_password.html",
+            error="Passwords do not match"
+        )
+
+    conn = get_db()
+
+    user = conn.execute(
+        "SELECT id FROM users WHERE phone = ?",
+        (phone,)
+    ).fetchone()
+
+    if not user:
+        conn.close()
+
+        return render_template(
+            "forgot_password.html",
+            error="Phone number not registered"
+        )
+
+    password_hash = generate_password_hash(new_password)
+
+    conn.execute(
+        "UPDATE users SET password = ? WHERE phone = ?",
+        (password_hash, phone)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return """
+    <h3>✅ Password reset successfully</h3>
+    <a href="/">Go to Login</a>
+    """
+
+
+# =========================
+# MAIN APP
 # =========================
 @app.route("/home", methods=["GET"])
 def main_home():
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
     return render_template("index.html")
+
+
+# =========================
+# LOGOUT
+# =========================
+@app.route("/logout", methods=["GET"])
+def logout():
+
+    session.clear()
+
+    return redirect(url_for("login"))
 
 
 # =========================
@@ -145,10 +227,22 @@ def update_location():
 
     global latest_location
 
+    if "user_id" not in session:
+        return jsonify({
+            "success": False,
+            "message": "Login required"
+        }), 401
+
     data = request.get_json(silent=True) or {}
 
     latitude = data.get("latitude")
     longitude = data.get("longitude")
+
+    if latitude is None or longitude is None:
+        return jsonify({
+            "success": False,
+            "message": "Latitude and longitude are required"
+        }), 400
 
     latest_location = {
         "latitude": latitude,
@@ -161,7 +255,7 @@ def update_location():
 
 
 # =========================
-# LIVE LOCATION VIEWER
+# LIVE VIEWER
 # =========================
 @app.route("/viewer", methods=["GET"])
 def viewer():
@@ -188,6 +282,13 @@ def get_live_location():
 # =========================
 @app.route("/sos", methods=["POST"])
 def sos():
+
+    if "user_id" not in session:
+        return jsonify({
+            "success": False,
+            "message": "Login required"
+        }), 401
+
     return jsonify({
         "success": True,
         "message": "SOS activated"
@@ -199,6 +300,12 @@ def sos():
 # =========================
 @app.route("/emergency", methods=["POST"])
 def emergency():
+
+    if "user_id" not in session:
+        return jsonify({
+            "success": False,
+            "message": "Login required"
+        }), 401
 
     data = request.get_json(silent=True) or {}
 
@@ -220,11 +327,9 @@ def emergency():
 
 
 # =========================
-# RUN LOCALLY
+# RUN
 # =========================
 if __name__ == "__main__":
-    print("RakshanBala Flask Server")
-
     app.run(
         host="0.0.0.0",
         port=5000,
