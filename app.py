@@ -4,7 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
-# Change this to a long random secret for your project
+# Change this to a long random secret for your real project
 app.secret_key = "rakshanbala-change-this-secret-key"
 
 DATABASE = "rakshanbala.db"
@@ -43,7 +43,7 @@ init_db()
 
 
 # ======================================================
-# HOME / LOGIN
+# LOGIN
 # ======================================================
 
 @app.route("/", methods=["GET"])
@@ -91,9 +91,6 @@ def login():
             error="Invalid phone number or password"
         )
 
-    if "user_id" in session:
-        return redirect(url_for("main_home"))
-
     return render_template("login.html")
 
 
@@ -134,7 +131,6 @@ def register():
         conn = get_db()
 
         try:
-
             conn.execute(
                 """
                 INSERT INTO users (name, phone, password)
@@ -146,7 +142,6 @@ def register():
             conn.commit()
 
         except sqlite3.IntegrityError:
-
             conn.close()
 
             return render_template(
@@ -162,11 +157,11 @@ def register():
 
 
 # ======================================================
-# FORGOT PASSWORD PAGE
+# FORGOT PASSWORD
 # ======================================================
 
 @app.route("/forgot_password", methods=["GET"])
-def forgot_password_page():
+def forgot_password():
     return render_template("forgot_password.html")
 
 
@@ -184,21 +179,18 @@ def reset_password():
     phone = phone.replace(" ", "")
 
     if not phone or not new_password or not confirm_password:
-
         return render_template(
             "forgot_password.html",
             error="Please fill all fields"
         )
 
     if new_password != confirm_password:
-
         return render_template(
             "forgot_password.html",
             error="Passwords do not match"
         )
 
     if len(new_password) < 4:
-
         return render_template(
             "forgot_password.html",
             error="Password must be at least 4 characters"
@@ -212,7 +204,6 @@ def reset_password():
     ).fetchone()
 
     if not user:
-
         conn.close()
 
         return render_template(
@@ -283,7 +274,6 @@ def update_location():
     longitude = data.get("longitude")
 
     if latitude is None or longitude is None:
-
         return jsonify({
             "success": False,
             "message": "Latitude and longitude are required"
@@ -312,7 +302,6 @@ def viewer():
 def get_live_location():
 
     if not latest_location:
-
         return jsonify({
             "success": False
         })
@@ -332,7 +321,6 @@ def get_live_location():
 def sos():
 
     if "user_id" not in session:
-
         return jsonify({
             "success": False,
             "message": "Login required"
@@ -352,7 +340,6 @@ def sos():
 def emergency():
 
     if "user_id" not in session:
-
         return jsonify({
             "success": False,
             "message": "Login required"
@@ -364,7 +351,6 @@ def emergency():
     phone = data.get("phone")
 
     if not name or not phone:
-
         return jsonify({
             "success": False,
             "message": "Name and phone are required"
@@ -383,9 +369,6 @@ def emergency():
 # ======================================================
 
 if __name__ == "__main__":
-
-    print("RakshanBala Flask Server")
-
     app.run(
         host="0.0.0.0",
         port=5000,
