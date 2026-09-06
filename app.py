@@ -2,24 +2,32 @@ from flask import Flask, jsonify, render_template, request
 
 app = Flask(__name__)
 
-# Store latest location
+# Store the latest location
 latest_location = {}
 
 
 # =========================
-# HOME / LOGIN
+# LOGIN PAGE
 # =========================
-@app.route("/")
+@app.route("/", methods=["GET"])
 def home():
     return render_template("login.html")
 
 
-@app.route("/login")
+@app.route("/login", methods=["GET", "POST"])
 def login():
+    if request.method == "POST":
+        # For now, accept the submitted login form
+        # and open the main RakshanBala page.
+        return render_template("index.html")
+
     return render_template("login.html")
 
 
-@app.route("/register")
+# =========================
+# REGISTER PAGE
+# =========================
+@app.route("/register", methods=["GET"])
 def register():
     return render_template("register.html")
 
@@ -27,7 +35,7 @@ def register():
 # =========================
 # MAIN RAKSHANBALA PAGE
 # =========================
-@app.route("/home")
+@app.route("/home", methods=["GET"])
 def main_home():
     return render_template("index.html")
 
@@ -39,7 +47,7 @@ def main_home():
 def update_location():
     global latest_location
 
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
 
     latitude = data.get("latitude")
     longitude = data.get("longitude")
@@ -57,12 +65,12 @@ def update_location():
 # =========================
 # LIVE LOCATION VIEWER
 # =========================
-@app.route("/viewer")
+@app.route("/viewer", methods=["GET"])
 def viewer():
     return render_template("viewer.html")
 
 
-@app.route("/get_live_location")
+@app.route("/get_live_location", methods=["GET"])
 def get_live_location():
     if not latest_location:
         return jsonify({
@@ -92,7 +100,7 @@ def sos():
 # =========================
 @app.route("/emergency", methods=["POST"])
 def emergency():
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
 
     name = data.get("name")
     phone = data.get("phone")
@@ -112,7 +120,7 @@ def emergency():
 
 
 # =========================
-# RUN SERVER
+# RUN LOCALLY
 # =========================
 if __name__ == "__main__":
     print("RakshanBala Flask Server")
