@@ -352,7 +352,7 @@ function getLocation() {
 
         {
             enableHighAccuracy: true,
-            timeout: 15000,
+            timeout: 60000,
             maximumAge: 0
         }
     );
@@ -456,7 +456,7 @@ function startLiveLocation() {
             {
                 enableHighAccuracy: true,
                 maximumAge: 5000,
-                timeout: 15000
+                timeout: 60000
             }
         );
 }
@@ -645,7 +645,7 @@ async function activateSOS() {
 
             {
                 enableHighAccuracy: true,
-                timeout: 15000,
+                timeout: 60000,
                 maximumAge: 0
             }
         );
